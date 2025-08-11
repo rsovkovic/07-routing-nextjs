@@ -9,22 +9,32 @@ import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteForm from "@/components/NoteForm/NoteForm";
 import Modal from "@/components/Modal/Modal";
-import { Note } from "@/types/note";
+import { Note, NoteTag } from "@/types/note";
 // import Loader from "../Loader/Loader";
 // import ErrorMessage from "../ErrorMessage/ErrorMessage";
 // import EmptyMessage from "../Empty/EmptyMessage";
 interface NotesProps {
   initialNotes: Note[];
   initialTotalPages: number;
+  currentTag?: NoteTag | "All";
 }
 
-export default function Notes({ initialNotes, initialTotalPages }: NotesProps) {
+export default function Notes({
+  initialNotes,
+  initialTotalPages,
+  currentTag,
+}: NotesProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const { data, isLoading, isError, isSuccess } = useQuery({
-    queryKey: ["notes", searchQuery, currentPage],
+    queryKey: ["notes", searchQuery, currentPage, currentTag],
     queryFn: () =>
-      fetchNotes({ page: currentPage, perPage: 12, search: searchQuery }),
+      fetchNotes({
+        page: currentPage,
+        perPage: 12,
+        search: searchQuery,
+        tag: currentTag === "All" ? undefined : currentTag,
+      }),
     enabled: true,
     placeholderData: keepPreviousData,
     initialData: {

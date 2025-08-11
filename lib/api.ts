@@ -1,10 +1,11 @@
 import axios from "axios";
-import { Note } from "../types/note";
+import { Note, NoteTag } from "../types/note";
 
 interface FetchNotesParams {
   page: number;
   perPage: number;
   search?: string;
+  tag?: NoteTag | "All";
 }
 interface FetchNotesResponse {
   notes: Note[];
@@ -23,11 +24,17 @@ export const fetchNotes = async ({
   page,
   perPage,
   search,
+  tag,
 }: FetchNotesParams): Promise<FetchNotesResponse> => {
   const response = await axios.get<FetchNotesResponse>(
     "https://notehub-public.goit.study/api/notes",
     {
-      params: { page, perPage, ...(search ? { search } : {}) },
+      params: {
+        page,
+        perPage,
+        ...(search ? { search } : {}),
+        ...(tag && tag !== "All" ? { tag } : {}),
+      },
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -75,3 +82,14 @@ export const fetchNoteById = async (id: string): Promise<Note> => {
   );
   return response.data;
 };
+// export const fetchNoteByTag = async (tag: NoteTag): Promise<Note[]> => {
+//   const response = await axios.get<Note[]>(
+//     `https://notehub-public.goit.study/api/notes?tag=${tag}`,
+//     {
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     }
+//   );
+//   return response.data;
+// };

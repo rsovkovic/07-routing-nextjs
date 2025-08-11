@@ -25,19 +25,32 @@
 
 // export default Notes;
 
-import Notes from "@/app/notes/Notes.client";
+import Notes from "@/app/notes/filter/[...slug]/Notes.client";
 import { fetchNotes } from "@/lib/api";
+import { NoteTag } from "@/types/note";
 // import { Note } from "@/types/note";
-export default async function NotesPage() {
+interface Props {
+  params: Promise<{ slug?: string[] }>;
+}
+
+export default async function NotesPage({ params }: Props) {
+  const awaitedParams = await params;
+  const currentTag = awaitedParams.slug?.[0] as NoteTag | "All" | undefined;
+  const tagFetch = !currentTag || currentTag === "All" ? undefined : currentTag;
   // const notes = await fetchNotes();
   const { notes, totalPages } = await fetchNotes({
     page: 1,
     perPage: 12,
     search: "",
+    tag: tagFetch,
   });
   return (
     <div>
-      <Notes initialNotes={notes} initialTotalPages={totalPages} />
+      <Notes
+        initialNotes={notes}
+        initialTotalPages={totalPages}
+        currentTag={currentTag ?? "All"}
+      />
     </div>
   );
 }

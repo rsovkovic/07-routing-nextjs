@@ -8,3 +8,11 @@ export interface Note {
   updatedAt: string;
   tag: NoteTag;
 }
+export const tags: (NoteTag | "All")[] = [
+  "All",
+  "Todo",
+  "Work",
+  "Personal",
+  "Meeting",
+  "Shopping",
+];
