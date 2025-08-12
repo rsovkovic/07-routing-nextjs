@@ -7,7 +7,7 @@ interface FetchNotesParams {
   search?: string;
   tag?: NoteTag | "All";
 }
-interface FetchNotesResponse {
+export interface FetchNotesResponse {
   notes: Note[];
   totalPages: number;
   //   total: number;

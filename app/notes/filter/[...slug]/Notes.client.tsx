@@ -3,30 +3,26 @@ import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import css from "./NotesPage.module.css";
-import { fetchNotes } from "@/lib/api";
+import { fetchNotes, FetchNotesResponse } from "@/lib/api";
 import SearchBox from "@/components/SearchBox/SearchBox";
 import NoteList from "@/components/NoteList/NoteList";
 import Pagination from "@/components/Pagination/Pagination";
 import NoteForm from "@/components/NoteForm/NoteForm";
 import Modal from "@/components/Modal/Modal";
-import { Note, NoteTag } from "@/types/note";
+import { NoteTag } from "@/types/note";
 // import Loader from "../Loader/Loader";
 // import ErrorMessage from "../ErrorMessage/ErrorMessage";
 // import EmptyMessage from "../Empty/EmptyMessage";
 interface NotesProps {
-  initialNotes: Note[];
-  initialTotalPages: number;
+  initialData: FetchNotesResponse;
   currentTag?: NoteTag | "All";
 }
 
-export default function Notes({
-  initialNotes,
-  initialTotalPages,
-  currentTag,
-}: NotesProps) {
+export default function Notes({ initialData, currentTag = "All" }: NotesProps) {
+  const [inputValue, setInputValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const { data, isLoading, isError, isSuccess } = useQuery({
+  const { data, isSuccess } = useQuery({
     queryKey: ["notes", searchQuery, currentPage, currentTag],
     queryFn: () =>
       fetchNotes({
@@ -35,21 +31,24 @@ export default function Notes({
         search: searchQuery,
         tag: currentTag === "All" ? undefined : currentTag,
       }),
-    enabled: true,
+
     placeholderData: keepPreviousData,
-    initialData: {
-      notes: initialNotes,
-      totalPages: initialTotalPages,
-    },
+    initialData,
   });
-  const updateSearchQuery = useDebouncedCallback(
-    (value: string) => setSearchQuery(value),
-    300
-  );
-  const handleSearchChange = (value: string) => {
+
+  const changeSearchQuery = useDebouncedCallback((newQuery: string) => {
     setCurrentPage(1);
-    updateSearchQuery(value);
+    setSearchQuery(newQuery);
+  }, 300);
+
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    changeSearchQuery(value);
   };
+
+  const changePage = useDebouncedCallback((page: number) => {
+    setCurrentPage(page);
+  }, 200);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -60,13 +59,17 @@ export default function Notes({
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox value={searchQuery} onChange={handleSearchChange} />
+        <SearchBox value={inputValue} onChange={handleInputChange} />
 
         {isSuccess && totalPages > 1 && (
           <Pagination
             page={currentPage}
             total={totalPages}
-            onChange={setCurrentPage}
+            onChange={(page: number) => {
+              if (page >= 1 && page <= totalPages) {
+                changePage(page);
+              }
+            }}
           />
         )}
         <button className={css.button} onClick={handleOpen}>
@@ -79,8 +82,10 @@ export default function Notes({
         )}
       </header>
       {/* {isLoading && <Loader />}
-      {isError && <ErrorMessage />}
-      {isSuccess && data.notes.length === 0 && <EmptyMessage />} */}
+      {isError && <ErrorMessage />} */}
+      {isSuccess && data.notes.length === 0 && (
+        <p className={css.emptyMessage}>No notes found.</p>
+      )}
       {isSuccess && data.notes.length > 0 && <NoteList notes={data.notes} />}
     </div>
   );
