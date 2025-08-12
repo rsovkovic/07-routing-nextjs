@@ -47,8 +47,9 @@ export default async function NotesPage({ params }: Props) {
   return (
     <div>
       <Notes
-        initialNotes={notes}
-        initialTotalPages={totalPages}
+        // initialNotes={notes}
+        // initialTotalPages={totalPages}
+        initialData={{ notes, totalPages }}
         currentTag={currentTag ?? "All"}
       />
     </div>
